@@ -6,6 +6,7 @@ namespace Petfinder\Http\Plugin;
 
 use Http\Client\Common\Plugin;
 use Http\Client\Exception\HttpException;
+use Http\Client\Exception\RequestException;
 use Http\Promise\Promise;
 use Petfinder\Exception\ProblemDetailsException;
 use Petfinder\Http\Json;
@@ -18,7 +19,9 @@ class ProblemDetailsPlugin implements Plugin
         /** @var Promise $promise */
         $promise = $next($request);
 
-        return $promise->then(null, function (HttpException $exception) {
+        return $promise->then(null, function (RequestException $exception) {
+            if (!$exception instanceof HttpException) throw $exception;
+            
             $response = $exception->getResponse();
 
             if (false === strpos($response->getHeaderLine('Content-Type'), 'application/problem+json')) {
